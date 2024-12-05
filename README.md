@@ -47,47 +47,56 @@ uvicorn main:app --reload
 ```
 O servidor será iniciado em: http://127.0.0.1:8000.
 
-# Exemplo de Requisição para Criar um Curso
+# Exemplo de Requisições para a rota Cursos
 
-Método: POST
+## Método: POST:
+```
 URL: http://127.0.0.1:8000/cursos
 Body: (form-data)
 Key	Value
 nome	Introdução à Programação
 descricao	Curso básico de Python
-Exemplo de Requisição para Listar Alunos
+```
 
-Método: GET
-URL: http://127.0.0.1:8000/alunos
-Exemplo de Requisição para Atualizar um Professor
-
-Método: PUT
-URL: http://127.0.0.1:8000/professores/1
+## Método: GET:
+```
+URL: http://127.0.0.1:8000/cursos
+```
+## Método: PUT
+```
+URL: http://127.0.0.1:8000/cursos/1
 Body: (form-data)
 Key	Value
 nome	João da Silva
 especializacao	Matemática
 departamento	Ciências Exatas
-Exemplo de Requisição para Deletar um Curso
+```
 
-Método: DELETE
+## Método: DELETE:
+```
 URL: http://127.0.0.1:8000/cursos/1
-Rotas Disponíveis
-Entidade	Método	Rota	Descrição
-Cursos	GET	/cursos	Lista todos os cursos
-GET	/cursos/{curso_id}	Retorna curso pelo ID
-POST	/cursos	Cria um novo curso
-PUT	/cursos/{curso_id}	Atualiza um curso pelo ID
-DELETE	/cursos/{curso_id}	Remove um curso pelo ID
-Alunos	GET	/alunos	Lista todos os alunos
-GET	/alunos/{aluno_id}	Retorna aluno pelo ID
-POST	/alunos	Cria um novo aluno
-PUT	/alunos/{aluno_id}	Atualiza um aluno pelo ID
-DELETE	/alunos/{aluno_id}	Remove um aluno pelo ID
-Professores	GET	/professores	Lista todos os professores
-GET	/professores/{professor_id}	Retorna professor pelo ID
-POST	/professores	Cria um novo professor
-PUT	/professores/{professor_id}	Atualiza um professor pelo ID
-DELETE	/professores/{professor_id}	Remove um professor pelo ID
+```
+
+Para as outras rotas, basta substituir "cursos" na URL por "alunos" ou "professores, mas aqui está um guia geral de todas as rotas disponíveis:
+# Rotas Disponíveis
+## Cursos	
+### GET	/cursos	Lista todos os cursos
+### GET	/cursos/{curso_id}	Retorna curso pelo ID
+### POST	/cursos	Cria um novo curso
+### PUT	/cursos/{curso_id}	Atualiza um curso pelo ID
+### DELETE	/cursos/{curso_id}	Remove um curso pelo ID
+
+## Alunos
+### GET	/alunos	Lista todos os alunos
+### GET	/alunos/{aluno_id}	Retorna aluno pelo ID
+### POST	/alunos	Cria um novo aluno
+### PUT	/alunos/{aluno_id}	Atualiza um aluno pelo ID
+### DELETE	/alunos/{aluno_id}	Remove um aluno pelo ID
+## Professores
+### GET	/professores	Lista todos os professores
+### GET	/professores/{professor_id}	Retorna professor pelo ID
+### POST	/professores	Cria um novo professor
+### PUT	/professores/{professor_id}	Atualiza um professor pelo ID
+### DELETE	/professores/{professor_id}	Remove um professor pelo ID
 Contribuição
 Contribuições são bem-vindas! Faça um fork do repositório, crie uma nova branch para suas alterações e envie um pull request.
