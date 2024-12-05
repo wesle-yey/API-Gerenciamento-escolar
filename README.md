@@ -28,9 +28,13 @@ git clone https://github.com/wesle-yey/API-Gerenciamento-escolar.git
 python -m venv venv
 ```
 # No Windows:
+```
 venv\Scripts\activate
+```
 # No Linux/macOS:
+```
 source venv/bin/activate
+```
 
 * Instale as dependências
 
