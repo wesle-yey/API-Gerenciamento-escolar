@@ -1,12 +1,18 @@
 # API de Gerenciamento de Cursos, Alunos e Professores
-Este projeto é uma API RESTful criada com FastAPI para gerenciar cursos, alunos e professores. Ele permite criar, atualizar, listar e excluir registros dessas entidades. A API é ideal para sistemas educacionais simples que precisam de funcionalidades básicas para manipular dados.
+Este projeto é uma API RESTful criada com FastAPI para gerenciar cursos, alunos e professores. Ele possui CRUD básico para algumas entidades. A API é ideal para sistemas educacionais simples que precisam de funcionalidades básicas para manipular dados.
 
-Problema que o Projeto Resolve
-A API resolve a necessidade de gerenciar informações relacionadas a um sistema educacional, permitindo:
+# A API resolve a necessidade de gerenciar informações relacionadas a um sistema educacional, permitindo:
 
-Cadastrar, atualizar, listar e excluir cursos.
-Gerenciar os alunos, associando-os a cursos específicos.
-Controlar os professores, incluindo especializações e departamentos.
+## CRUD básico para as seguintes rotas:
+### Alunos:
+Id, nome, email e curso
+
+### Professores:
+Id, nome, especialização e departamento
+
+### Cursos:
+Id, nome e descrição
+
 Como Instalar e Executar o Projeto
 Pré-requisitos
 Python 3.8 ou superior instalado.
