@@ -1,7 +1,7 @@
 # API de Gerenciamento de Cursos, Alunos e Professores
 Este projeto é uma API RESTful criada com FastAPI para gerenciar cursos, alunos e professores. Ele possui CRUD básico para algumas entidades. A API é ideal para sistemas educacionais simples que precisam de funcionalidades básicas para manipular dados.
 
-# A API resolve a necessidade de gerenciar informações relacionadas a um sistema educacional, permitindo:
+ A API resolve a necessidade de gerenciar informações relacionadas a um sistema educacional, permitindo:
 
 ## CRUD básico para as seguintes rotas:
 ### Alunos:
