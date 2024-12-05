@@ -13,44 +13,37 @@ Id, nome, especialização e departamento
 ### Cursos:
 Id, nome e descrição
 
-Como Instalar e Executar o Projeto
-Pré-requisitos
-Python 3.8 ou superior instalado.
-Ferramenta de gerenciamento de pacotes como pip.
-Passo a Passo
-Clone o repositório
+## Como Instalar e Executar o Projeto:
+### Pré-requisitos:
+* Python 3.8 ou superior instalado.
+* Ferramenta de gerenciamento de pacotes como pip.
+### Passo a Passo:
+* Clone o repositório:
+```
+git clone https://github.com/wesle-yey/API-Gerenciamento-escolar.git
+```
 
-bash
-Copiar código
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
-Crie e ative um ambiente virtual
-
-bash
-Copiar código
+* Crie e ative um ambiente virtual
+```
 python -m venv venv
+```
 # No Windows:
 venv\Scripts\activate
 # No Linux/macOS:
 source venv/bin/activate
-Instale as dependências
 
-bash
-Copiar código
+* Instale as dependências
+
+```
 pip install fastapi uvicorn
-Execute o projeto
-
-bash
-Copiar código
+```
+* Execute o projeto:
+```
 uvicorn main:app --reload
+```
 O servidor será iniciado em: http://127.0.0.1:8000.
 
-Testando as Rotas Usando o Postman
-Importe a coleção no Postman
-
-Crie uma nova coleção no Postman para gerenciar as requisições.
-Configure os endpoints com base nas rotas da API (ex.: GET /cursos, POST /alunos).
-Exemplo de Requisição para Criar um Curso
+# Exemplo de Requisição para Criar um Curso
 
 Método: POST
 URL: http://127.0.0.1:8000/cursos
