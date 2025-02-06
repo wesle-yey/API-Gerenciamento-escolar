@@ -1,112 +1,120 @@
-from typing import List
+from fastapi import FastAPI, Depends, HTTPException, Request, Form
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+import models, schemas, crud
+from database import get_db, Base, engine
 
-from fastapi import FastAPI, Form, HTTPException, Query
+# Cria as tabelas no banco de dados
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
-# "Banco de dados" em memória
-cursos = []
-alunos = []
-professores = []
+#Se acessar sem rotas, redireciona para alunos
+@app.get("/")
+def home(request: Request):
+    return RedirectResponse(url="/alunos", status_code=303)
 
-# --- CURSOS ---
-@app.get("/cursos")
-async def list_cursos():
-    return {"status": "success", "message": "Cursos retrieved successfully.", "data": cursos}
-
-@app.get("/cursos/{curso_id}")
-async def get_curso_by_id(curso_id: int):
-    for curso in cursos:
-        if curso["id"] == curso_id:
-            return {"status": "success", "message": "Curso retrieved successfully.", "data": curso}
-    raise HTTPException(status_code=404, detail="Curso not found.")
-
-@app.post("/cursos")
-async def create_curso(nome: str = Form(...), descricao: str = Form(...)):
-    curso = {"id": len(cursos) + 1, "nome": nome, "descricao": descricao}
-    cursos.append(curso)
-    return {"status": "success", "message": "Curso added successfully.", "data": curso}
-
-@app.put("/cursos/{curso_id}")
-async def update_curso(curso_id: int, nome: str = Form(...), descricao: str = Form(...)):
-    for curso in cursos:
-        if curso["id"] == curso_id:
-            curso.update({"nome": nome, "descricao": descricao})
-            return {"status": "success", "message": "Curso updated successfully.", "data": curso}
-    raise HTTPException(status_code=404, detail="Curso not found.")
-
-@app.delete("/cursos/{curso_id}")
-async def delete_curso(curso_id: int):
-    for index, curso in enumerate(cursos):
-        if curso["id"] == curso_id:
-            deleted_curso = cursos.pop(index)
-            return {"status": "success", "message": "Curso deleted successfully.", "data": deleted_curso}
-    raise HTTPException(status_code=404, detail="Curso not found.")
-
-# --- ALUNOS ---
+# Rotas para Alunos
 @app.get("/alunos")
-async def list_alunos():
-    return {"status": "success", "message": "Alunos retrieved successfully.", "data": alunos}
+def listar_alunos(request: Request, db: Session = Depends(get_db)):
+    alunos = crud.get_alunos(db)
+    return templates.TemplateResponse("alunos.html", {"request": request, "alunos": alunos})
 
-@app.get("/alunos/{aluno_id}")
-async def get_aluno_by_id(aluno_id: int):
-    for aluno in alunos:
-        if aluno["id"] == aluno_id:
-            return {"status": "success", "message": "Aluno retrieved successfully.", "data": aluno}
-    raise HTTPException(status_code=404, detail="Aluno not found.")
+@app.get("/alunos/adicionar")
+def form_adicionar_aluno(request: Request):
 
-@app.post("/alunos")
-async def create_aluno(nome: str = Form(...), email: str = Form(...), curso_id: int = Form(...)):
-    aluno = {"id": len(alunos) + 1, "nome": nome, "email": email, "curso_id": curso_id}
-    alunos.append(aluno)
-    return {"status": "success", "message": "Aluno added successfully.", "data": aluno}
+    return templates.TemplateResponse("form_aluno.html", {"request": request})
 
-@app.put("/alunos/{aluno_id}")
-async def update_aluno(aluno_id: int, nome: str = Form(...), email: str = Form(...), curso_id: int = Form(...)):
-    for aluno in alunos:
-        if aluno["id"] == aluno_id:
-            aluno.update({"nome": nome, "email": email, "curso_id": curso_id})
-            return {"status": "success", "message": "Aluno updated successfully.", "data": aluno}
-    raise HTTPException(status_code=404, detail="Aluno not found.")
+@app.post("/alunos/adicionar")
+def adicionar_aluno(nome: str = Form(...), curso_id: int = Form(...), db: Session = Depends(get_db)):
+    aluno = schemas.AlunoCreate(nome=nome, curso_id=curso_id)
+    crud.create_aluno(db, aluno)
+    return RedirectResponse(url="/alunos", status_code=303)
 
-@app.delete("/alunos/{aluno_id}")
-async def delete_aluno(aluno_id: int):
-    for index, aluno in enumerate(alunos):
-        if aluno["id"] == aluno_id:
-            deleted_aluno = alunos.pop(index)
-            return {"status": "success", "message": "Aluno deleted successfully.", "data": deleted_aluno}
-    raise HTTPException(status_code=404, detail="Aluno not found.")
+@app.get("/alunos/editar/{aluno_id}")
+def form_editar_aluno(request: Request, aluno_id: int, db: Session = Depends(get_db)):
+    aluno = crud.get_aluno(db, aluno_id)
+    if not aluno:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    return templates.TemplateResponse("form_aluno.html", {"request": request, "aluno": aluno})
 
-# --- PROFESSORES ---
+@app.post("/alunos/editar/{aluno_id}")
+def editar_aluno(aluno_id: int, nome: str = Form(...), curso_id: int = Form(...), db: Session = Depends(get_db)):
+    aluno = schemas.AlunoUpdate(nome=nome, curso_id=curso_id)
+    crud.update_aluno(db, aluno_id, aluno)
+    return RedirectResponse(url="/alunos", status_code=303)
+
+@app.get("/alunos/remover/{aluno_id}")
+def remover_aluno(aluno_id: int, db: Session = Depends(get_db)):
+    crud.delete_aluno(db, aluno_id)
+    return RedirectResponse(url="/alunos", status_code=303)
+
+# Rotas para Cursos
+@app.get("/cursos")
+def listar_cursos(request: Request, db: Session = Depends(get_db)):
+    cursos = crud.get_cursos(db)
+    return templates.TemplateResponse("cursos.html", {"request": request, "cursos": cursos})
+
+@app.get("/cursos/adicionar")
+def form_adicionar_curso(request: Request):
+    return templates.TemplateResponse("form_curso.html", {"request": request})
+
+@app.post("/cursos/adicionar")
+def adicionar_curso(nome: str = Form(...), descricao: str = Form(...), db: Session = Depends(get_db)):
+    curso = schemas.CursoCreate(nome=nome, descricao=descricao)
+    crud.create_curso(db, curso)
+    return RedirectResponse(url="/cursos", status_code=303)
+
+@app.get("/cursos/editar/{curso_id}")
+def form_editar_curso(request: Request, curso_id: int, db: Session = Depends(get_db)):
+    curso = crud.get_curso(db, curso_id)
+    if not curso:
+        raise HTTPException(status_code=404, detail="Curso não encontrado")
+    return templates.TemplateResponse("form_curso.html", {"request": request, "curso": curso})
+
+@app.post("/cursos/editar/{curso_id}")
+def editar_curso(curso_id: int, nome: str = Form(...), descricao: str = Form(...), db: Session = Depends(get_db)):
+    curso = schemas.CursoUpdate(nome=nome, descricao=descricao)
+    crud.update_curso(db, curso_id, curso)
+    return RedirectResponse(url="/cursos", status_code=303)
+
+@app.get("/cursos/remover/{curso_id}")
+def remover_curso(curso_id: int, db: Session = Depends(get_db)):
+    crud.delete_curso(db, curso_id)
+    return RedirectResponse(url="/cursos", status_code=303)
+
+# Rotas para Professores
 @app.get("/professores")
-async def list_professores():
-    return {"status": "success", "message": "Professores retrieved successfully.", "data": professores}
+def listar_professores(request: Request, db: Session = Depends(get_db)):
+    professores = crud.get_professores(db)
+    return templates.TemplateResponse("professores.html", {"request": request, "professores": professores})
 
-@app.get("/professores/{professor_id}")
-async def get_professor_by_id(professor_id: int):
-    for professor in professores:
-        if professor["id"] == professor_id:
-            return {"status": "success", "message": "Professor retrieved successfully.", "data": professor}
-    raise HTTPException(status_code=404, detail="Professor not found.")
+@app.get("/professores/adicionar")
+def form_adicionar_professor(request: Request):
+    return templates.TemplateResponse("form_professor.html", {"request": request})
 
-@app.post("/professores")
-async def create_professor(nome: str = Form(...), especializacao: str = Form(...), departamento: str = Form(...)):
-    professor = {"id": len(professores) + 1, "nome": nome, "especializacao": especializacao, "departamento": departamento}
-    professores.append(professor)
-    return {"status": "success", "message": "Professor added successfully.", "data": professor}
+@app.post("/professores/adicionar")
+def adicionar_professor(nome: str = Form(...), especializacao: str = Form(...), departamento: str = Form(...), db: Session = Depends(get_db)):
+    professor = schemas.ProfessorCreate(nome=nome, especializacao=especializacao, departamento=departamento)
+    crud.create_professor(db, professor)
+    return RedirectResponse(url="/professores", status_code=303)
 
-@app.put("/professores/{professor_id}")
-async def update_professor(professor_id: int, nome: str = Form(...), especializacao: str = Form(...), departamento: str = Form(...)):
-    for professor in professores:
-        if professor["id"] == professor_id:
-            professor.update({"nome": nome, "especializacao": especializacao, "departamento": departamento})
-            return {"status": "success", "message": "Professor updated successfully.", "data": professor}
-    raise HTTPException(status_code=404, detail="Professor not found.")
+@app.get("/professores/editar/{professor_id}")
+def form_editar_professor(request: Request, professor_id: int, db: Session = Depends(get_db)):
+    professor = crud.get_professor(db, professor_id)
+    if not professor:
+        raise HTTPException(status_code=404, detail="Professor não encontrado")
+    return templates.TemplateResponse("form_professor.html", {"request": request, "professor": professor})
 
-@app.delete("/professores/{professor_id}")
-async def delete_professor(professor_id: int):
-    for index, professor in enumerate(professores):
-        if professor["id"] == professor_id:
-            deleted_professor = professores.pop(index)
-            return {"status": "success", "message": "Professor deleted successfully.", "data": deleted_professor}
-    raise HTTPException(status_code=404, detail="Professor not found.")
+@app.post("/professores/editar/{professor_id}")
+def editar_professor(professor_id: int, nome: str = Form(...), especializacao: str = Form(...), departamento: str = Form(...), db: Session = Depends(get_db)):
+    professor = schemas.ProfessorUpdate(nome=nome, especializacao=especializacao, departamento=departamento)
+    crud.update_professor(db, professor_id, professor)
+    return RedirectResponse(url="/professores", status_code=303)
+
+@app.get("/professores/remover/{professor_id}")
+def remover_professor(professor_id: int, db: Session = Depends(get_db)):
+    crud.delete_professor(db, professor_id)
+    return RedirectResponse(url="/professores", status_code=303)
