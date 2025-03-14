@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-python-dotenv
-pydantic
-jinja2
-python-multipart
