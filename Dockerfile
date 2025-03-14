@@ -1,20 +1,22 @@
 # Usa uma imagem Python oficial como base
 FROM python:3.9-slim
 
-# Define o diretório de trabalho dentro do contêiner
 WORKDIR /app
 
-# Copia os arquivos de requisitos para o contêiner
+# Instala dependências
 COPY requirements.txt .
-
-# Instala as dependências do Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o restante do código para o contêiner
+# Copia o código da aplicação
 COPY . .
 
-# Expõe a porta 8000
+# Baixa o script para aguardar o banco de dados
+RUN apt-get update && apt-get install -y wget
+RUN wget -O /wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+# Expõe a porta da API
 EXPOSE 8000
 
-# Comando para iniciar o servidor
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Comando de inicialização
+CMD ["/wait-for-it.sh", "db:5432", "--", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

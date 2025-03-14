@@ -9,9 +9,10 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=sqlite:///./database.db
+      - DATABASE_URL=postgresql://admin:password@db:5432/escola
     depends_on:
-      - db
+      db:
+        condition: service_healthy  # ✅ Aguarda o PostgreSQL estar pronto
 
   db:
     image: postgres:14
@@ -23,6 +24,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:  # ✅ Verifica se o banco está pronto
+      test: ["CMD-SHELL", "pg_isready -U admin -d escola"]
+      interval: 10s
+      retries: 5
+      timeout: 5s
 
 volumes:
   postgres_data:

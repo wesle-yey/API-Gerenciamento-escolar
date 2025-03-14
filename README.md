@@ -39,7 +39,7 @@ source venv/bin/activate
 * Instale as dependências
 
 ```
-pip install fastapi uvicorn
+pip install -r requirements.txt
 ```
 * Execute o projeto:
 ```

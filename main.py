@@ -2,11 +2,16 @@ from fastapi import FastAPI, Depends, HTTPException, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-import models, schemas, crud
-from database import get_db, Base, engine
+import schemas, crud
+from database import engine, get_db
+from base import Base
 
 # Cria as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
+from database import create_tables
+
+create_tables()  # Garante que as tabelas sejam criadas antes de iniciar o app
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
