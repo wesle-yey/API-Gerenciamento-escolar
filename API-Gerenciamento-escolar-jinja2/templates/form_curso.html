@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if curso %}Editar curso{% else %}Adicionar curso{% endif %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+    {% include 'menu.html' %}
+    <h1>{% if curso %}Editar curso{% else %}Adicionar curso{% endif %}</h1>
+    <form action="{% if curso %}/cursos/editar/{{ curso.id }}{% else %}/cursos/adicionar{% endif %}" method="post" class="mt-4">
+        <div class="mb-3">
+            <label for="nome" class="form-label">Nome:</label>
+            <input type="text" id="nome" name="nome" class="form-control" value="{{ curso.nome if curso }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição:</label>
+            <input type="text" id="descricao" name="descricao" class="form-control" value="{{ curso.descricao if curso }}" required>
+        </div>
+        <button type="submit" class="btn btn-success">Salvar</button>
+        <a href="/cursos" class="btn btn-secondary">Cancelar</a>
+    </form>
+</body>
+</html>
