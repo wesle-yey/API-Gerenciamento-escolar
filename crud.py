@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-import models, schemas
+import app.models.models as models, app.schemas.schemas as schemas
 
 # CRUD Aluno
 def get_alunos(db: Session):
