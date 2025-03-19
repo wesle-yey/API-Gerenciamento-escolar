@@ -33,3 +33,8 @@ class ProfessorCreate(ProfessorBase):
 
 class ProfessorUpdate(ProfessorBase):
     pass
+
+class UserBase(BaseModel):
+    username: str
+    password: str
+
