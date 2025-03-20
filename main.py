@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 import app.schemas.schemas as schemas, crud
 from database.database import engine, get_db
 from database.base import Base
+from database.auth_user import UserUseCases
+from app.schemas.schemas import User
 
 # Cria as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
@@ -123,3 +125,13 @@ def editar_professor(professor_id: int, nome: str = Form(...), especializacao: s
 def remover_professor(professor_id: int, db: Session = Depends(get_db)):
     crud.delete_professor(db, professor_id)
     return RedirectResponse(url="/professores", status_code=303)
+
+@app.post("/register")
+def userRegister(
+    user: User,
+    db: Session= Depends(get_db)
+
+    ):
+    uc= UserUseCases(db_session=db)
+    uc.user_register(user=user)
+    return user.model_dump_json()

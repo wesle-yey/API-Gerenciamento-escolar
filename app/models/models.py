@@ -25,7 +25,7 @@ class Professor(Base):
     especializacao = Column(String(150), nullable=False)  # Especialização com limite de 150 caracteres
     departamento = Column(String(100), nullable=False)  # Nome do departamento com limite de 100 caracteres
 
-class User(Base):
+class UserModel(Base):
     __tablename__= "users"
     id= Column(Integer, primary_key=True, autoincrement=True)
     username=Column(String, nullable=False, unique=True)

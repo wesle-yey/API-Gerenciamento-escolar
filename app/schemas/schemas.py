@@ -34,7 +34,7 @@ class ProfessorCreate(ProfessorBase):
 class ProfessorUpdate(ProfessorBase):
     pass
 
-class UserBase(BaseModel):
+class User(BaseModel):
     username: str
     password: str
 
