@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, Form
+from fastapi import FastAPI, Depends, HTTPException, Request, Form, status
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
@@ -127,7 +128,7 @@ def remover_professor(professor_id: int, db: Session = Depends(get_db)):
     return RedirectResponse(url="/professores", status_code=303)
 
 @app.post("/register")
-def userRegister(
+def user_register(
     user: User,
     db: Session= Depends(get_db)
 
@@ -135,3 +136,20 @@ def userRegister(
     uc= UserUseCases(db_session=db)
     uc.user_register(user=user)
     return user.model_dump_json()
+
+@app.post("/login")
+def user_login(
+    request_form_user: OAuth2PasswordRequestForm= Depends(),
+    db: Session= Depends(get_db)
+):
+    uc= UserUseCases(db_session=db)
+    user= User(
+        username= request_form_user.username,
+        password= request_form_user.password
+    )
+
+    auth_data= uc.user_login(user=user)
+    return {
+        "content": auth_data,
+        "status_code": status.HTTP_200_OK
+    }

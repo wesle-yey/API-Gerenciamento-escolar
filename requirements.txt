@@ -7,3 +7,4 @@ jinja2
 python-multipart
 psycopg2-binary
 passlib
+python-jose[cryptography]
