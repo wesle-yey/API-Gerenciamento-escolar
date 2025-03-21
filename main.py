@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, Form, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import app.schemas.schemas as schemas, crud
 from database.database import engine, get_db
@@ -127,6 +127,14 @@ def remover_professor(professor_id: int, db: Session = Depends(get_db)):
     crud.delete_professor(db, professor_id)
     return RedirectResponse(url="/professores", status_code=303)
 
+@app.get("/login")
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/register")
+def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
 @app.post("/register")
 def user_register(
     user: User,
@@ -153,3 +161,38 @@ def user_login(
         "content": auth_data,
         "status_code": status.HTTP_200_OK
     }
+
+# Rota para cadastro de usuário
+@app.post("/register")
+async def user_register(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    return {"username": username, "password": password}
+
+# Rota para login de usuário
+@app.post("/login")
+def user_login(
+    request_form_user: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    uc = UserUseCases(db_session=db)
+    user = User(
+        username=request_form_user.username,
+        password=request_form_user.password
+    )
+    auth_data = uc.user_login(user=user)
+    # Após o login, redireciona para uma rota protegida (exemplo: /alunos)
+    response = RedirectResponse(url="/alunos", status_code=303)
+    # Opcional: Armazena o token JWT em um cookie HTTP-only
+    response.set_cookie(key="access_token", value=auth_data["access_token"], httponly=True)
+    return response
+
+@app.get("/test")
+def test_verify():
+    return 'It works'
+
+@app.post("/test-register")
+async def test_register(username: str = Form(...), password: str = Form(...)):
+    return JSONResponse({"username": username, "password": password})
