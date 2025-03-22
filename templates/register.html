@@ -8,38 +8,15 @@
 </head>
 <body class="container mt-5">
     <h2>Registro de Usuário</h2>
-    <form id="registerForm" action="/register" method="post">
-        <div class="mb-3">
-            <label for="username" class="form-label">Usuário:</label>
-            <input type="text" id="username" name="username" class="form-control" required>
-        </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Senha:</label>
-            <input type="password" id="password" name="password" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Registrar</button>
-    </form>
-
-    <script>
-        document.getElementById("registerForm").addEventListener("submit", async function(event) {
-            event.preventDefault();
-            const formData = new FormData(this);
-
-            const response = await fetch("/register", {
-                method: "POST",
-                body: new URLSearchParams(formData), // Converte os dados para o formato correto
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                alert("Registro realizado com sucesso!");
-            } else {
-                alert("Erro: " + JSON.stringify(data));
-            }
-        });
-    </script>
+    <form action="/register" method="POST" class="form-register">
+    
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required class="form-input">
+    
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required class="form-input">
+    
+        <button type="submit" class="btn-submit">Registrar</button>
+    </form>  
 </body>
 </html>

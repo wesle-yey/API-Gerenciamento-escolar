@@ -135,16 +135,6 @@ def login_page(request: Request):
 def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
-@app.post("/register")
-def user_register(
-    user: User,
-    db: Session= Depends(get_db)
-
-    ):
-    uc= UserUseCases(db_session=db)
-    uc.user_register(user=user)
-    return user.model_dump_json()
-
 @app.post("/login")
 def user_login(
     request_form_user: OAuth2PasswordRequestForm= Depends(),
@@ -169,7 +159,15 @@ async def user_register(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    return {"username": username, "password": password}
+    # Criar objeto do usuário
+    user = User(username=username, password=password)
+
+    # Salvar usuário no banco de dados
+    uc = UserUseCases(db_session=db)
+    uc.user_register(user=user)
+
+    # Redirecionar para a página de login
+    return RedirectResponse(url="/login", status_code=303)
 
 # Rota para login de usuário
 @app.post("/login")
@@ -188,11 +186,3 @@ def user_login(
     # Opcional: Armazena o token JWT em um cookie HTTP-only
     response.set_cookie(key="access_token", value=auth_data["access_token"], httponly=True)
     return response
-
-@app.get("/test")
-def test_verify():
-    return 'It works'
-
-@app.post("/test-register")
-async def test_register(username: str = Form(...), password: str = Form(...)):
-    return JSONResponse({"username": username, "password": password})
