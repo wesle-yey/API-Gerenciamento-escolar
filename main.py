@@ -1,13 +1,16 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, Form, status
+
+from fastapi import FastAPI, Depends, HTTPException, Request, Form, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from app.models.models import UserModel
 import app.schemas.schemas as schemas, crud
 from database.database import engine, get_db
 from database.base import Base
 from database.auth_user import UserUseCases
 from app.schemas.schemas import User
+from database.token import verify_token
 
 # Cria as tabelas no banco de dados
 Base.metadata.create_all(bind=engine)
@@ -26,7 +29,7 @@ def home(request: Request):
 
 # Rotas para Alunos
 @app.get("/alunos")
-def listar_alunos(request: Request, db: Session = Depends(get_db)):
+def listar_alunos(request: Request, db: Session = Depends(get_db), user: UserModel = Depends(verify_token)):
     alunos = crud.get_alunos(db)
     return templates.TemplateResponse("alunos.html", {"request": request, "alunos": alunos})
 
@@ -137,20 +140,30 @@ def register_page(request: Request):
 
 @app.post("/login")
 def user_login(
-    request_form_user: OAuth2PasswordRequestForm= Depends(),
-    db: Session= Depends(get_db)
+    response: Response,
+    request_form_user: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
 ):
-    uc= UserUseCases(db_session=db)
-    user= User(
-        username= request_form_user.username,
-        password= request_form_user.password
-    )
+    uc = UserUseCases(db_session=db)
+    user = User(username=request_form_user.username, password=request_form_user.password)
+    auth_data = uc.user_login(user=user)
+    access_token = auth_data["access_token"]
+    # Define o tempo de expiração conforme sua lógica (ex.: 30 minutos)
+    max_age = 30 * 60
 
-    auth_data= uc.user_login(user=user)
-    return {
-        "content": auth_data,
-        "status_code": status.HTTP_200_OK
-    }
+    # Configura o cookie com o token JWT. 
+    # As flags httponly e secure garantem maior segurança (secure=True exige HTTPS)
+    response = RedirectResponse(url="/alunos", status_code=303)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,  # Alterar para True em produção com HTTPS
+        max_age=max_age,
+        expires=max_age,
+        samesite="lax"
+    )
+    return response
 
 # Rota para cadastro de usuário
 @app.post("/register")
@@ -169,20 +182,6 @@ async def user_register(
     # Redirecionar para a página de login
     return RedirectResponse(url="/login", status_code=303)
 
-# Rota para login de usuário
-@app.post("/login")
-def user_login(
-    request_form_user: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    uc = UserUseCases(db_session=db)
-    user = User(
-        username=request_form_user.username,
-        password=request_form_user.password
-    )
-    auth_data = uc.user_login(user=user)
-    # Após o login, redireciona para uma rota protegida (exemplo: /alunos)
-    response = RedirectResponse(url="/alunos", status_code=303)
-    # Opcional: Armazena o token JWT em um cookie HTTP-only
-    response.set_cookie(key="access_token", value=auth_data["access_token"], httponly=True)
-    return response
+@app.get("/test")
+def rota_protegida(user: UserModel = Depends(verify_token)):
+    return {"message": "Acesso permitido!", "usuario": user.username}
