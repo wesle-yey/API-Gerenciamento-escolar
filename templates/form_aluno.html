@@ -15,8 +15,15 @@
             <input type="text" id="nome" name="nome" class="form-control" value="{{ aluno.nome if aluno }}" required>
         </div>
         <div class="mb-3">
-            <label for="curso_id" class="form-label">Curso_id:</label>
-            <input type="text" id="curso_id" name="curso_id" class="form-control" value="{{ aluno.curso_id if aluno }}" required>
+            <label for="curso_id" class="form-label">Curso:</label>
+            <select id="curso_id" name="curso_id" class="form-control" required>
+                <option value="" disabled selected>Selecione um curso</option>
+                {% for curso in cursos %}
+                    <option value="{{ curso.id }}" {% if aluno and aluno.curso_id == curso.id %}selected{% endif %}>
+                        {{ curso.nome }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
         <button type="submit" class="btn btn-success">Salvar</button>
         <a href="/alunos" class="btn btn-secondary">Cancelar</a>
