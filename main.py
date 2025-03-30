@@ -19,7 +19,6 @@ async def middleware_login(request: Request, call_next):
     if response.status_code == 401:
         print("Requisição não autorizada (401)")
         return RedirectResponse("/login")
-    
     return response
 
 @app.get("/")

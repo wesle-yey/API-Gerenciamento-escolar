@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from app.models.models import UserModel
 from database.auth_user import ALGORITHM, SECRET_KEY
@@ -38,3 +39,11 @@ def verify_token(request: Request, db: Session = Depends(get_db)):
 
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido ou expirado")
+
+def logout(request: Request):
+    response = RedirectResponse(url='/login')
+    
+    # Expirando o cookie
+    response.delete_cookie("access_token")
+    
+    return response

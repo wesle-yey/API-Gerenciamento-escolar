@@ -5,6 +5,7 @@ from database.auth_user import UserUseCases
 from app.schemas.schemas import User
 from database.database import get_db
 from fastapi.templating import Jinja2Templates
+from database.token import logout
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")  # 📁 Diretório de templates
@@ -54,3 +55,7 @@ async def user_register(
     uc = UserUseCases(db_session=db)
     uc.user_register(user=user)
     return RedirectResponse(url="/login", status_code=303)
+
+@router.get("/logout")
+def logout_system(request: Request):
+    return logout(request)
