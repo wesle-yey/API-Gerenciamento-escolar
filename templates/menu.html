@@ -5,7 +5,7 @@
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto"> <!-- Aqui eu movi o ms-auto para o ul -->
+            <ul class="navbar-nav ms-1">
                 <li class="nav-item">
                     <a class="nav-link" href="/alunos">Alunos</a>
                 </li>
@@ -15,7 +15,8 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/professores">Professores</a>
                 </li>
-                <!-- Link de Logout -->
+            </ul>
+                <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="/logout">Sair</a>
                 </li>
@@ -23,3 +24,9 @@
         </div>
     </div>
 </nav>
+
+<style>
+.navbar-nav .nav-link {
+    color: #f8f9fa !important; /* Cor mais clara para melhor visibilidade */
+}
+</style>
