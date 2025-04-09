@@ -6,5 +6,8 @@ pydantic
 jinja2
 python-multipart
 psycopg2-binary
-passlib
+passlib[bcrypt,sha256_crypt]==1.7.4
 python-jose[cryptography]
+dotenv
+pyqt5==5.12.3
+pyqtwebengine==5.12.1
