@@ -4,7 +4,8 @@ from database.base import Base  # Agora importamos de base.py
 import app.models.models as models  # Importamos após definir Base
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL")  # Ou sua URL do banco de dados
+#DATABASE_URL = os.getenv("DATABASE_URL")  # Ou sua URL do banco de dados
+DATABASE_URL="postgresql://admin:password@db:5432/escola"
 
 engine = create_engine(DATABASE_URL)
 
