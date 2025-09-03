@@ -52,8 +52,14 @@ class TestAPI:
         client.post("/register", json=self.test_user)
 
         # Fazer login para obter token
-        login_response = client.post("/login", json=self.test_user)
-        assert login_response.status_code == 200
+        # Fazer login para obter token
+login_response = client.post(
+    "/login",
+    data={"username": "testuser", "password": "testpass123"},
+    headers={"Content-Type": "application/x-www-form-urlencoded"}
+)
+assert login_response.status_code == 200
+
 
         # Obter token do corpo da resposta (ajuste conforme retorno do backend)
         try:
