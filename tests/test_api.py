@@ -1,16 +1,39 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+from database.base import Base
+from database.database import get_db
 from main import app
-from app.models.models import UserModel
-from database.database import get_db, Base, engine
-from sqlalchemy.orm import Session
+import os
 
-# ===================== SETUP DO TESTE =====================
-# Cria a tabela de teste
+# Configuração do banco de teste em memória
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Criar tabelas de teste
 Base.metadata.create_all(bind=engine)
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+# Substituir a dependência do banco
+app.dependency_overrides[get_db] = override_get_db
+
 client = TestClient(app)
 
-TEST_USER = {"username": "testuser", "password": "123456"}
+TEST_USER = {"username": "testuser", "password": "testpass123"}
 
 def get_access_token(client: TestClient, username: str, password: str):
     """Função auxiliar para registrar usuário e obter token de acesso."""
@@ -24,8 +47,12 @@ def get_access_token(client: TestClient, username: str, password: str):
 
 # ===================== TESTES =====================
 class TestAPI:
-    @pytest.fixture(autouse=True)
-    def setup(self):
+    def setup_method(self):
+        """Setup antes de cada teste"""
+        # Limpar banco antes de cada teste
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
+        
         # Obter token e headers para rotas autenticadas
         token = get_access_token(client, TEST_USER["username"], TEST_USER["password"])
         self.auth_headers = {"Authorization": f"Bearer {token}"}
@@ -81,16 +108,16 @@ class TestAPI:
         assert response.status_code == 303  # Redirect response
 
     def test_autenticacao_obrigatoria(self):
-        # Teste sem token
+        # Teste sem token - deve redirecionar para login
         response = client.get("/cursos")
         assert response.status_code == 401
 
     def test_registro_usuario_e_login(self):
         username = "novo_user"
-        password = "123456"
+        password = "newpass123"
         # Registrar usuário
         response = client.post("/register", data={"username": username, "password": password})
-        assert response.status_code == 303 or response.status_code == 200
+        assert response.status_code == 303
 
         # Login
         response = client.post("/api/login", data={"username": username, "password": password})

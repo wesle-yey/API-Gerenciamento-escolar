@@ -2,143 +2,144 @@ name: CI/CD Pipeline - Sistema de Gerenciamento Escolar
 
 on:
   push:
-    branches: [ main, develop, autenticacao ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main]
 
 jobs:
   test:
     name: Executar Testes
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_USER: admin
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: escola_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
 
     steps:
-    - name: Checkout do código
-      uses: actions/checkout@v4
-      
-    - name: Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-        
-    - name: Instalar dependências
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        
-    - name: Executar testes
-      env:
-        DATABASE_URL: postgresql://admin:password@localhost:5432/escola_test
-        SECRET_KEY: test_secret_key_for_ci_cd
-        ALGORITHM: HS256
-      run: |
-        pytest tests/ -v --tb=short
-        
-    - name: Verificar cobertura de testes
-      run: |
-        pytest tests/ --cov=. --cov-report=xml --cov-report=term-missing
-        
-    - name: Upload cobertura para Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov bandit safety
+
+      - name: Configurar variáveis de ambiente
+        run: |
+          echo "DATABASE_URL=sqlite:///:memory:" >> $GITHUB_ENV
+          echo "SECRET_KEY=test_secret_key_for_github_actions" >> $GITHUB_ENV
+          echo "ALGORITHM=HS256" >> $GITHUB_ENV
+          echo "ENVIRONMENT=test" >> $GITHUB_ENV
+
+      - name: Executar testes
+        run: |
+          pytest tests/ -v --tb=short --cov=. --cov-report=xml
+
+      - name: Upload cobertura
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
 
   security:
     name: Verificação de Segurança
     runs-on: ubuntu-latest
-    needs: test
-    
-    steps:
-    - name: Checkout do código
-      uses: actions/checkout@v4
-      
-    - name: Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-        
-    - name: Instalar dependências
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit safety
-        
-    - name: Verificação de segurança com Bandit
-      run: |
-        bandit -r . -f json -o bandit-report.json || true
-        
-    - name: Verificação de vulnerabilidades com Safety
-      run: |
-        safety check -r requirements.txt --json --output safety-report.json || true
-        
-    - name: Upload relatórios de segurança
-      uses: actions/upload-artifact@v3
-      with:
-        name: security-reports
-        path: |
-          bandit-report.json
-          safety-report.json
 
-  build-and-push:
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
+
+      - name: Executar Bandit (análise de segurança)
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+
+      - name: Executar Safety (verificação de dependências)
+        run: |
+          safety check -r requirements.txt --json --output safety-report.json || true
+
+      - name: Upload relatórios de segurança
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+  docker:
     name: Build e Push da Imagem Docker
     runs-on: ubuntu-latest
     needs: [test, security]
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
-    - name: Checkout do código
-      uses: actions/checkout@v4
-      
-    - name: Login no Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Build da imagem Docker
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar:latest .
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar:${{ github.sha }} .
-        
-    - name: Push da imagem para Docker Hub
-      run: |
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar:latest
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar:${{ github.sha }}
-        
-    - name: Deploy automático (opcional)
-      run: |
-        echo "Imagem publicada com sucesso no Docker Hub!"
-        echo "Para executar: docker run -p 8000:8000 ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar:latest"
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extrair metadados
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/gerenciamento-escolar
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   notify:
     name: Notificação de Status
     runs-on: ubuntu-latest
-    needs: [test, security, build-and-push]
+    needs: [test, security, docker]
     if: always()
-    
+
     steps:
-    - name: Notificar status do pipeline
-      run: |
-        if [ "${{ needs.test.result }}" == "success" ] && [ "${{ needs.security.result }}" == "success" ]; then
+      - name: Notificar sucesso
+        if: ${{ needs.test.result == 'success' && needs.security.result == 'success' && (needs.docker.result == 'success' || needs.docker.result == 'skipped') }}
+        run: |
           echo "✅ Pipeline executado com sucesso!"
-          echo "🚀 Sistema disponível para deploy"
-        else
+          echo "🧪 Testes: ${{ needs.test.result }}"
+          echo "🔒 Segurança: ${{ needs.security.result }}"
+          echo "🐳 Docker: ${{ needs.docker.result }}"
+
+      - name: Notificar falha
+        if: ${{ needs.test.result == 'failure' || needs.security.result == 'failure' || needs.docker.result == 'failure' }}
+        run: |
           echo "❌ Pipeline falhou!"
+          echo "🧪 Testes: ${{ needs.test.result }}"
+          echo "🔒 Segurança: ${{ needs.security.result }}"
+          echo "🐳 Docker: ${{ needs.docker.result }}"
           echo "🔍 Verifique os logs para mais detalhes"
           exit 1
-        fi
