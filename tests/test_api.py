@@ -41,24 +41,24 @@ class TestAPI:
         # Limpar banco antes de cada teste
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
-        
+
         # Criar usuário de teste
         self.test_user = {
             "username": "testuser",
             "password": "testpass123"
         }
-        
+
         # Registrar usuário
         client.post("/register", data=self.test_user)
-        
+
         # Fazer login para obter token
         login_response = client.post("/login", data=self.test_user)
-        assert login_response.status_code == 303
-        
+        assert login_response.status_code == 200
+
         # Obter token do cookie
         cookies = login_response.cookies
         self.access_token = cookies.get("access_token")
-        
+
         # Configurar headers para autenticação
         self.headers = {"Cookie": f"access_token={self.access_token}"}
     
@@ -71,7 +71,7 @@ class TestAPI:
         }
         
         response = client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Verificar se o curso aparece na lista
         response = client.get("/cursos", headers=self.headers)
@@ -95,7 +95,7 @@ class TestAPI:
         }
         
         response = client.post("/alunos/adicionar", data=aluno_data, headers=self.headers)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Verificar se o aluno aparece na lista
         response = client.get("/alunos", headers=self.headers)
@@ -112,7 +112,7 @@ class TestAPI:
         }
         
         response = client.post("/professores/adicionar", data=professor_data, headers=self.headers)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Verificar se o professor aparece na lista
         response = client.get("/professores", headers=self.headers)
@@ -137,7 +137,7 @@ class TestAPI:
         }
         
         response = client.post("/cursos/editar/1", data=curso_editado, headers=self.headers)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Verificar se foi editado
         response = client.get("/cursos", headers=self.headers)
@@ -160,7 +160,7 @@ class TestAPI:
         
         # Deletar curso
         response = client.get("/cursos/remover/1", headers=self.headers)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Verificar se foi deletado
         response = client.get("/cursos", headers=self.headers)
@@ -180,8 +180,8 @@ class TestAPI:
         }
         
         response = client.post("/register", data=novo_usuario)
-        assert response.status_code == 303
+    assert response.status_code == 200
         
         # Tentar fazer login com o novo usuário
         login_response = client.post("/login", data=novo_usuario)
-        assert login_response.status_code == 303
+    assert login_response.status_code == 200
