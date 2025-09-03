@@ -10,6 +10,20 @@ from database.token import logout
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")  # 📁 Diretório de templates
 
+@router.post("/api/login")
+def api_login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    uc = UserUseCases(db_session=db)
+    user = User(username=form_data.username, password=form_data.password)
+    try:
+        auth_data = uc.user_login(user=user)
+        access_token = auth_data["access_token"]
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        
 # 🔹 Rota GET para exibir a página de login
 @router.get("/login")
 def login_form(request: Request):
