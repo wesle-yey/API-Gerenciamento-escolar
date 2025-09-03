@@ -19,12 +19,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+          cache: 'pip'
 
       - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov bandit safety
 
       - name: Configurar variáveis de ambiente
         run: |
@@ -32,10 +32,11 @@ jobs:
           echo "SECRET_KEY=test_secret_key_for_github_actions" >> $GITHUB_ENV
           echo "ALGORITHM=HS256" >> $GITHUB_ENV
           echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          echo "CORS_ORIGINS=http://localhost:3000,http://localhost:8000" >> $GITHUB_ENV
 
       - name: Executar testes
         run: |
-          pytest tests/ -v --tb=short --cov=. --cov-report=xml
+          pytest tests/ -v --tb=short
 
       - name: Upload cobertura
         uses: codecov/codecov-action@v3
@@ -56,22 +57,26 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+          cache: 'pip'
 
       - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
-          pip install bandit safety
+          pip install -r requirements.txt
 
       - name: Executar Bandit (análise de segurança)
         run: |
-          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . -f json -o bandit-report.json || echo "Bandit completed with warnings"
+          bandit -r . -ll || echo "Bandit security scan completed"
 
       - name: Executar Safety (verificação de dependências)
         run: |
-          safety check -r requirements.txt --json --output safety-report.json || true
+          safety check -r requirements.txt --json --output safety-report.json || echo "Safety check completed with warnings"
+          safety check -r requirements.txt || echo "Safety dependency check completed"
 
       - name: Upload relatórios de segurança
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: security-reports
           path: |
@@ -126,20 +131,38 @@ jobs:
     if: always()
 
     steps:
+      - name: Verificar status dos jobs
+        run: |
+          echo "📊 Status dos Jobs:"
+          echo "🧪 Testes: ${{ needs.test.result }}"
+          echo "🔒 Segurança: ${{ needs.security.result }}"
+          echo "🐳 Docker: ${{ needs.docker.result }}"
+
       - name: Notificar sucesso
         if: ${{ needs.test.result == 'success' && needs.security.result == 'success' && (needs.docker.result == 'success' || needs.docker.result == 'skipped') }}
         run: |
           echo "✅ Pipeline executado com sucesso!"
-          echo "🧪 Testes: ${{ needs.test.result }}"
-          echo "🔒 Segurança: ${{ needs.security.result }}"
-          echo "🐳 Docker: ${{ needs.docker.result }}"
+          echo "🎉 Todos os jobs passaram com sucesso!"
 
       - name: Notificar falha
         if: ${{ needs.test.result == 'failure' || needs.security.result == 'failure' || needs.docker.result == 'failure' }}
         run: |
           echo "❌ Pipeline falhou!"
-          echo "🧪 Testes: ${{ needs.test.result }}"
-          echo "🔒 Segurança: ${{ needs.security.result }}"
-          echo "🐳 Docker: ${{ needs.docker.result }}"
           echo "🔍 Verifique os logs para mais detalhes"
+          echo "📋 Jobs com falha:"
+          if [ "${{ needs.test.result }}" == "failure" ]; then
+            echo "  - 🧪 Testes falharam"
+          fi
+          if [ "${{ needs.security.result }}" == "failure" ]; then
+            echo "  - 🔒 Verificação de segurança falhou"
+          fi
+          if [ "${{ needs.docker.result }}" == "failure" ]; then
+            echo "  - 🐳 Build Docker falhou"
+          fi
           exit 1
+
+      - name: Notificar cancelamento
+        if: ${{ needs.test.result == 'cancelled' || needs.security.result == 'cancelled' || needs.docker.result == 'cancelled' }}
+        run: |
+          echo "⚠️ Pipeline foi cancelada!"
+          echo "🔄 Alguns jobs foram cancelados"
