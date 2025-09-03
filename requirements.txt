@@ -20,12 +20,5 @@ pydantic==2.5.0
 # Variáveis de ambiente
 python-dotenv==1.0.0
 
-# Dependências de teste
+# Testes básicos
 pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-httpx==0.25.2
-
-# Dependências de segurança
-bandit==1.7.5
-safety==2.3.5

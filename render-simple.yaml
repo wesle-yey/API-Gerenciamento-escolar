@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: api-gerenciamento-escolar
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./test.db
+      - key: SECRET_KEY
+        value: your-secret-key-here
+      - key: ALGORITHM
+        value: HS256
+      - key: CORS_ORIGINS
+        value: "*"
