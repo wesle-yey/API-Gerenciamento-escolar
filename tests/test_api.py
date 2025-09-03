@@ -69,10 +69,10 @@ class TestAPI:
             "nome": "Introdução à Programação",
             "descricao": "Curso básico de Python"
         }
-        
+
         response = client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Verificar se o curso aparece na lista
         response = client.get("/cursos", headers=self.headers)
         assert response.status_code == 200
@@ -87,16 +87,16 @@ class TestAPI:
             "descricao": "Curso de matemática básica"
         }
         client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-        
+
         # Criar aluno
         aluno_data = {
             "nome": "João Silva",
             "curso_id": "1"
         }
-        
+
         response = client.post("/alunos/adicionar", data=aluno_data, headers=self.headers)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Verificar se o aluno aparece na lista
         response = client.get("/alunos", headers=self.headers)
         assert response.status_code == 200
@@ -110,10 +110,10 @@ class TestAPI:
             "especializacao": "Matemática",
             "departamento": "Ciências Exatas"
         }
-        
+
         response = client.post("/professores/adicionar", data=professor_data, headers=self.headers)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Verificar se o professor aparece na lista
         response = client.get("/professores", headers=self.headers)
         assert response.status_code == 200
@@ -129,16 +129,16 @@ class TestAPI:
             "descricao": "História antiga"
         }
         client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-        
+
         # Editar curso
         curso_editado = {
             "nome": "História Moderna",
             "descricao": "História dos séculos XVI-XIX"
         }
-        
+
         response = client.post("/cursos/editar/1", data=curso_editado, headers=self.headers)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Verificar se foi editado
         response = client.get("/cursos", headers=self.headers)
         assert response.status_code == 200
@@ -153,15 +153,15 @@ class TestAPI:
             "descricao": "Geografia física"
         }
         client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-        
+
         # Verificar se foi criado
         response = client.get("/cursos", headers=self.headers)
         assert "Geografia" in response.text
-        
+
         # Deletar curso
         response = client.get("/cursos/remover/1", headers=self.headers)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Verificar se foi deletado
         response = client.get("/cursos", headers=self.headers)
         assert "Geografia" not in response.text
@@ -178,10 +178,10 @@ class TestAPI:
             "username": "novousuario",
             "password": "senha123"
         }
-        
+
         response = client.post("/register", data=novo_usuario)
-    assert response.status_code == 200
-        
+        assert response.status_code == 200
+
         # Tentar fazer login com o novo usuário
         login_response = client.post("/login", data=novo_usuario)
-    assert login_response.status_code == 200
+        assert login_response.status_code == 200
