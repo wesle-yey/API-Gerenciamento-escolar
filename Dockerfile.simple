@@ -1,0 +1,22 @@
+# Dockerfile ultra-simples para Render
+FROM python:3.11-slim
+
+# Instalar apenas o essencial
+RUN apt-get update && apt-get install -y \
+  libpq-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copiar e instalar dependências
+COPY requirements-minimal.txt .
+RUN pip install --no-cache-dir -r requirements-minimal.txt
+
+# Copiar código
+COPY . .
+
+# Expor porta
+EXPOSE 8000
+
+# Comando simples
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -22,7 +22,7 @@ jobs:
       - name: Instalar dependências básicas
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi uvicorn pytest
+          pip install -r requirements.txt
 
       - name: Teste básico de importação
         run: |
@@ -46,7 +46,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t app:latest .
+          docker build -f Dockerfile.simple -t app:latest .
           echo "✅ Docker build concluído"
 
   notify:
