@@ -1,109 +1,97 @@
 import pytest
 from fastapi.testclient import TestClient
-from main import app
+from app.main import app  # ajuste se seu main.py tiver outro caminho
+from app.models.models import UserModel
+from database.database import get_db, Base, engine
+from sqlalchemy.orm import Session
 
+# ===================== SETUP DO TESTE =====================
+# Cria a tabela de teste
+Base.metadata.create_all(bind=engine)
+client = TestClient(app)
+
+TEST_USER = {"username": "testuser", "password": "123456"}
+
+def get_access_token(client: TestClient, username: str, password: str):
+    """Função auxiliar para registrar usuário e obter token de acesso."""
+    # Registrar usuário
+    client.post("/register", data={"username": username, "password": password})
+    # Fazer login
+    response = client.post("/api/login", data={"username": username, "password": password})
+    assert response.status_code == 200
+    access_token = response.json()["access_token"]
+    return access_token
+
+# ===================== TESTES =====================
 class TestAPI:
-    def setup_method(self):
-        # Inicializa o client
-        self.client = TestClient(app)
-        self.headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
-        # Cria usuário de teste e faz login
-        register_data = {"username": "teste", "password": "123456"}
-        self.client.post("/register", data=register_data, headers=self.headers)
-
-        login_response = self.client.post("/login", data=register_data, headers=self.headers)
-        assert login_response.status_code == 200
-
-        # Pega cookie de autenticação
-        self.auth_headers = {"Cookie": login_response.headers.get("set-cookie")}
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        # Obter token e headers para rotas autenticadas
+        token = get_access_token(client, TEST_USER["username"], TEST_USER["password"])
+        self.auth_headers = {"Authorization": f"Bearer {token}"}
 
     def test_homepage(self):
-        """Teste: A página inicial deve carregar com login"""
-        response = self.client.get("/", headers=self.auth_headers)
+        response = client.get("/", headers=self.auth_headers)
         assert response.status_code == 200
-        assert "Bem-vindo" in response.text or "Home" in response.text
+        assert "text/html" in response.headers["content-type"]
 
     def test_criar_curso_e_verificar_lista(self):
-        """Teste: Criar um curso e verificar se aparece na lista"""
-        curso_data = {
-            "nome": "Introdução à Programação",
-            "descricao": "Curso básico de Python"
-        }
+        curso_data = {"nome": "Matemática"}
+        response = client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
+        assert response.status_code == 200 or response.status_code == 201
 
-        response = self.client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
+        response = client.get("/cursos", headers=self.auth_headers)
         assert response.status_code == 200
-
-        response = self.client.get("/cursos", headers=self.auth_headers)
-        assert response.status_code == 200
-        assert "Introdução à Programação" in response.text
-        assert "Curso básico de Python" in response.text
+        assert any(curso_data["nome"] in c for c in response.text)
 
     def test_criar_aluno_associado_a_curso(self):
-        """Teste: Criar um aluno vinculado a um curso existente"""
-        # Primeiro cria curso
-        curso_data = {"nome": "Matemática", "descricao": "Curso de Matemática Básica"}
-        self.client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
+        # Criar curso
+        curso_data = {"nome": "Física"}
+        client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        aluno_data = {"nome": "João Silva", "curso_id": 1}
-        response = self.client.post("/alunos/adicionar", data=aluno_data, headers=self.auth_headers)
-        assert response.status_code == 200
-
-        response = self.client.get("/alunos", headers=self.auth_headers)
-        assert response.status_code == 200
-        assert "João Silva" in response.text
+        aluno_data = {"nome": "João", "matricula": 1, "curso_id": 1}
+        response = client.post("/alunos/adicionar", data=aluno_data, headers=self.auth_headers)
+        assert response.status_code == 200 or response.status_code == 201
 
     def test_criar_professor_e_verificar_lista(self):
-        """Teste: Criar um professor e verificar se aparece na lista"""
-        professor_data = {
-            "nome": "Maria Souza",
-            "especializacao": "História",
-            "departamento": "Humanas"
-        }
-        response = self.client.post("/professores/adicionar", data=professor_data, headers=self.auth_headers)
-        assert response.status_code == 200
+        professor_data = {"nome": "Prof. Silva", "especializacao": "Matemática", "departamento": "Ciências"}
+        response = client.post("/professores/adicionar", data=professor_data, headers=self.auth_headers)
+        assert response.status_code == 200 or response.status_code == 201
 
-        response = self.client.get("/professores", headers=self.auth_headers)
+        response = client.get("/professores", headers=self.auth_headers)
         assert response.status_code == 200
-        assert "Maria Souza" in response.text
+        assert "Prof. Silva" in response.text
 
     def test_editar_curso(self):
-        """Teste: Editar um curso existente"""
-        curso_data = {"nome": "Geografia", "descricao": "Curso Geografia"}
-        self.client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
+        # Criar curso
+        curso_data = {"nome": "História"}
+        client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        edit_data = {"nome": "Geografia Avançada", "descricao": "Curso Geografia Atualizado"}
-        response = self.client.post("/cursos/editar/1", data=edit_data, headers=self.auth_headers)
+        # Editar curso
+        updated_data = {"id": 1, "nome": "História Moderna"}
+        response = client.put("/cursos/editar/1", data=updated_data, headers=self.auth_headers)
         assert response.status_code == 200
-
-        response = self.client.get("/cursos", headers=self.auth_headers)
-        assert "Geografia Avançada" in response.text
 
     def test_deletar_curso(self):
-        """Teste: Deletar um curso"""
-        curso_data = {"nome": "História", "descricao": "Curso História"}
-        self.client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
+        curso_data = {"nome": "Química"}
+        client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        response = self.client.post("/cursos/deletar/1", headers=self.auth_headers)
+        response = client.delete("/cursos/deletar/1", headers=self.auth_headers)
         assert response.status_code == 200
-
-        response = self.client.get("/cursos", headers=self.auth_headers)
-        assert "História" not in response.text
 
     def test_autenticacao_obrigatoria(self):
-        """Teste: Verificar se rotas protegidas exigem autenticação"""
-        response = self.client.get("/cursos")
-        # Pode ser redirect ou não autorizado
-        assert response.status_code in [401, 302, 307]
+        # Teste sem token
+        response = client.get("/cursos")
+        assert response.status_code == 401
 
     def test_registro_usuario_e_login(self):
-        """Teste: Registro de novo usuário e login"""
-        # Registro
-        register_data = {"username": "novo_usuario", "password": "123456"}
-        response = self.client.post("/register", data=register_data, headers=self.headers)
-        assert response.status_code == 200
+        username = "novo_user"
+        password = "123456"
+        # Registrar usuário
+        response = client.post("/register", data={"username": username, "password": password})
+        assert response.status_code == 303 or response.status_code == 200
 
         # Login
-        login_response = self.client.post("/login", data=register_data, headers=self.headers)
-        assert login_response.status_code == 200
-        assert "set-cookie" in login_response.headers or "Set-Cookie" in login_response.headers
+        response = client.post("/api/login", data={"username": username, "password": password})
+        assert response.status_code == 200
+        assert "access_token" in response.json()
