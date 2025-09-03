@@ -2,7 +2,7 @@ name: CI/CD Pipeline - Sistema de Gerenciamento Escolar
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, autenticacao ]
   pull_request:
     branches: [ main, develop ]
 
