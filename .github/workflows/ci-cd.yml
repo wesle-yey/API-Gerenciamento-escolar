@@ -60,7 +60,7 @@ jobs:
           echo "📊 Status dos Jobs:"
           echo "🧪 Testes: ${{ needs.test.result }}"
           echo "🐳 Build: ${{ needs.build.result }}"
-          
+
           if [ "${{ needs.test.result }}" == "success" ]; then
             echo "✅ Pipeline executada com sucesso!"
           else

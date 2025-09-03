@@ -3,6 +3,7 @@
 ## ✅ Solução Completa Implementada
 
 ### 1. Instalação Rápida
+
 ```bash
 # Opção 1: Script automático
 python install.py
@@ -12,11 +13,13 @@ pip install -r requirements.txt
 ```
 
 ### 2. Testar Localmente
+
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ### 3. Testar Docker
+
 ```bash
 docker build -f Dockerfile.simple -t app:latest .
 docker run -p 8000:8000 app:latest
@@ -25,12 +28,14 @@ docker run -p 8000:8000 app:latest
 ## 🔧 Configuração Render
 
 ### Build Settings:
+
 ```
 Build Command: pip install -r requirements.txt
 Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
 ### Environment Variables:
+
 ```
 DATABASE_URL=sqlite:///./test.db
 SECRET_KEY=seu-secret-key-aqui
@@ -51,6 +56,7 @@ ENVIRONMENT=production
 ## 🧪 Testes
 
 ### Teste Básico:
+
 ```bash
 python -c "import fastapi; print('✅ FastAPI OK')"
 python -c "import uvicorn; print('✅ Uvicorn OK')"
@@ -58,6 +64,7 @@ python -c "import sqlalchemy; print('✅ SQLAlchemy OK')"
 ```
 
 ### Teste Completo:
+
 ```bash
 python test_simple.py
 ```
