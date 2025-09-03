@@ -37,37 +37,37 @@ class TestAPI:
     """Testes para as funcionalidades principais da API"""
     
     def setup_method(self):
-    """Setup antes de cada teste"""
-    # Limpar banco antes de cada teste
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+        """Setup antes de cada teste"""
+        # Limpar banco antes de cada teste
+        Base.metadata.drop_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
 
-    # Criar usuário de teste
-    self.test_user = {
-        "username": "testuser",
-        "password": "testpass123"
-    }
+        # Criar usuário de teste
+        self.test_user = {
+            "username": "testuser",
+            "password": "testpass123"
+        }
 
-    # Registrar usuário
-    client.post("/register", data=self.test_user) # ⚠️ Aqui precisa ser `data`, não `json`
+        # Registrar usuário
+        client.post("/register", data=self.test_user) # ⚠️ Aqui precisa ser `data`, não `json`
 
-    # Login para obter token
-    # Tentar fazer login com o novo usuário
-    login_response = client.post(
-        "/api/login",
-        data=novo_usuario,
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
-    )
+        # Login para obter token
+        # Tentar fazer login com o novo usuário
+        login_response = client.post(
+            "/api/login",
+            data=novo_usuario,
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
 
 
-    assert login_response.status_code == 200
+        assert login_response.status_code == 200
 
-    try:
-        self.access_token = login_response.json().get("access_token")
-    except Exception:
-        self.access_token = None
+        try:
+            self.access_token = login_response.json().get("access_token")
+        except Exception:
+            self.access_token = None
 
-    self.headers = {"Authorization": f"Bearer {self.access_token}"} if self.access_token else {}
+        self.headers = {"Authorization": f"Bearer {self.access_token}"} if self.access_token else {}
 
     def test_criar_curso_e_verificar_lista(self):
         """Teste: Criar um curso e verificar se aparece na lista"""
