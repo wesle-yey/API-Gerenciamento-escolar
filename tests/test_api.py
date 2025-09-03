@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from app.main import app  # ajuste se seu main.py tiver outro caminho
+from main import app
 from app.models.models import UserModel
 from database.database import get_db, Base, engine
 from sqlalchemy.orm import Session
