@@ -11,3 +11,7 @@ python-jose[cryptography]
 dotenv
 pyqt5==5.12.3
 pyqtwebengine==5.12.1
+# Dependências de teste
+pytest
+pytest-asyncio
+httpx
