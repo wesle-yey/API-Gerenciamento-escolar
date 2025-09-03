@@ -48,12 +48,12 @@ class TestAPI:
         }
 
         # Registrar usuário
-        client.post("/register", data=self.test_user)
+        client.post("/register", data=self.test_user)  # precisa ser `data`
 
         # Login para obter token
         login_response = client.post(
             "/api/login",
-            data=self.test_user,
+            data=self.test_user,  # form-urlencoded
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
 
@@ -83,15 +83,18 @@ class TestAPI:
     
     def test_criar_aluno_e_verificar_lista(self):
         """Teste: Criar um aluno e verificar se aparece na lista"""
+        # Criar primeiro o curso (obrigatório)
         curso_data = {
             "nome": "Matemática",
             "descricao": "Curso de matemática básica"
         }
-        client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
+        curso_resp = client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
+        assert curso_resp.status_code == 200
 
+        # Criar aluno associado ao curso id=1
         aluno_data = {
             "nome": "João Silva",
-            "curso_id": "1"
+            "curso_id": 1
         }
 
         response = client.post("/alunos/adicionar", json=aluno_data, headers=self.headers)
@@ -168,11 +171,11 @@ class TestAPI:
             "password": "senha123"
         }
 
-        response = client.post("/register", data=novo_usuario)
-        assert response.status_code in (200, 303)
+        response = client.post("/register", data=novo_usuario)  # precisa ser `data`
+        assert response.status_code == 200
 
         login_response = client.post(
-            "/login",
+            "/api/login",
             data=novo_usuario,
             headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
