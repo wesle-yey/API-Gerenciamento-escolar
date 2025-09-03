@@ -11,8 +11,8 @@ from app.models.models import UserModel
 from app.schemas.schemas import User
 
 load_dotenv()
-SECRET_KEY= os.getenv('SECRET_KEY')
-ALGORITHM= os.getenv('ALGORITHM')
+SECRET_KEY= os.getenv('SECRET_KEY', 'fallback_secret_key_for_development_only')
+ALGORITHM= os.getenv('ALGORITHM', 'HS256')
 crypt_context= CryptContext(schemes=['sha256_crypt'])
 
 class UserUseCases:
@@ -68,7 +68,7 @@ class UserUseCases:
         except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f'Invalid access token: {access_token}'
+                detail='Invalid access token'
             )
 
         user_on_db= self.db_session.query(UserModel).filter_by(username= data['sub']).first()

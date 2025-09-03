@@ -1,33 +1,67 @@
+version: '3.8'
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: gerenciamento-escolar-app
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - app_data:/app/data
+      - ./logs:/app/logs
     environment:
       - DATABASE_URL=postgresql://admin:password@db:5432/escola
+      - SECRET_KEY=dev_secret_key_change_in_production
+      - ALGORITHM=HS256
+      - ENVIRONMENT=development
+      - DEBUG=True
     depends_on:
       db:
-        condition: service_healthy  # ✅ Aguarda o PostgreSQL estar pronto
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
-    image: postgres:14
+    image: postgres:15-alpine
+    container_name: gerenciamento-escolar-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: escola
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:  # ✅ Verifica se o banco está pronto
-      test: ["CMD-SHELL", "pg_isready -U admin -d escola"]
-      interval: 5s
-      retries: 5
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d escola" ]
+      interval: 10s
       timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 volumes:
   postgres_data:
+    driver: local
+  app_data:
+    driver: local

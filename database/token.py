@@ -2,7 +2,12 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer
 from app.models.models import UserModel
-from database.auth_user import ALGORITHM, SECRET_KEY
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY', 'fallback_secret_key_for_development_only')
+ALGORITHM = os.getenv('ALGORITHM', 'HS256')
 from sqlalchemy.orm import Session
 from database.database import get_db
 from jose import jwt, JWTError

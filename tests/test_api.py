@@ -36,27 +36,27 @@ class TestAPI:
         assert "text/html" in response.headers["content-type"]
 
     def test_criar_curso_e_verificar_lista(self):
-        curso_data = {"nome": "Matemática"}
+        curso_data = {"nome": "Matemática", "descricao": "Curso de matemática básica"}
         response = client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
-        assert response.status_code == 200 or response.status_code == 201
+        assert response.status_code == 303  # Redirect response
 
         response = client.get("/cursos", headers=self.auth_headers)
         assert response.status_code == 200
-        assert any(curso_data["nome"] in c for c in response.text)
+        assert "Matemática" in response.text
 
     def test_criar_aluno_associado_a_curso(self):
         # Criar curso
-        curso_data = {"nome": "Física"}
+        curso_data = {"nome": "Física", "descricao": "Curso de física básica"}
         client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        aluno_data = {"nome": "João", "matricula": 1, "curso_id": 1}
+        aluno_data = {"nome": "João", "curso_id": 1}
         response = client.post("/alunos/adicionar", data=aluno_data, headers=self.auth_headers)
-        assert response.status_code == 200 or response.status_code == 201
+        assert response.status_code == 303  # Redirect response
 
     def test_criar_professor_e_verificar_lista(self):
         professor_data = {"nome": "Prof. Silva", "especializacao": "Matemática", "departamento": "Ciências"}
         response = client.post("/professores/adicionar", data=professor_data, headers=self.auth_headers)
-        assert response.status_code == 200 or response.status_code == 201
+        assert response.status_code == 303  # Redirect response
 
         response = client.get("/professores", headers=self.auth_headers)
         assert response.status_code == 200
@@ -64,20 +64,21 @@ class TestAPI:
 
     def test_editar_curso(self):
         # Criar curso
-        curso_data = {"nome": "História"}
+        curso_data = {"nome": "História", "descricao": "História antiga"}
         client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        # Editar curso
-        updated_data = {"id": 1, "nome": "História Moderna"}
-        response = client.put("/cursos/editar/1", data=updated_data, headers=self.auth_headers)
-        assert response.status_code == 200
+        # Editar curso usando a rota POST que existe
+        updated_data = {"nome": "História Moderna", "descricao": "História dos séculos XVI-XIX"}
+        response = client.post("/cursos/editar/1", data=updated_data, headers=self.auth_headers)
+        assert response.status_code == 303  # Redirect response
 
     def test_deletar_curso(self):
-        curso_data = {"nome": "Química"}
+        curso_data = {"nome": "Química", "descricao": "Química básica"}
         client.post("/cursos/adicionar", data=curso_data, headers=self.auth_headers)
 
-        response = client.delete("/cursos/deletar/1", headers=self.auth_headers)
-        assert response.status_code == 200
+        # Usar a rota GET que existe para remover
+        response = client.get("/cursos/remover/1", headers=self.auth_headers)
+        assert response.status_code == 303  # Redirect response
 
     def test_autenticacao_obrigatoria(self):
         # Teste sem token

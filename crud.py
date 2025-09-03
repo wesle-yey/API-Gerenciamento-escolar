@@ -1,12 +1,12 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 import app.models.models as models, app.schemas.schemas as schemas
 
 # CRUD Aluno
 def get_alunos(db: Session):
-    return db.query(models.Aluno).all()
+    return db.query(models.Aluno).options(joinedload(models.Aluno.curso)).all()
 
 def get_aluno(db: Session, aluno_id: int):
-    return db.query(models.Aluno).filter(models.Aluno.id == aluno_id).first()
+    return db.query(models.Aluno).options(joinedload(models.Aluno.curso)).filter(models.Aluno.id == aluno_id).first()
 
 def create_aluno(db: Session, aluno: schemas.AlunoCreate):
     db_aluno = models.Aluno(nome=aluno.nome, curso_id=aluno.curso_id)

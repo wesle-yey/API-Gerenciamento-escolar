@@ -4,10 +4,10 @@ from database.base import Base  # Agora importamos de base.py
 import app.models.models as models  # Importamos após definir Base
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL")  # Ou sua URL do banco de dados
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")  # Fallback para SQLite
 
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
