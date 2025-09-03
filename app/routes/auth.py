@@ -6,6 +6,7 @@ from app.schemas.schemas import User
 from database.database import get_db
 from fastapi.templating import Jinja2Templates
 from database.token import logout
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")  # 📁 Diretório de templates
