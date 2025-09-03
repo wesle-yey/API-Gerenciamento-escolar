@@ -49,18 +49,20 @@ class TestAPI:
         }
 
         # Registrar usuário
-        client.post("/register", data=self.test_user)
+        client.post("/register", json=self.test_user)
 
         # Fazer login para obter token
-        login_response = client.post("/login", data=self.test_user)
+        login_response = client.post("/login", json=self.test_user)
         assert login_response.status_code == 200
 
-        # Obter token do cookie
-        cookies = login_response.cookies
-        self.access_token = cookies.get("access_token")
+        # Obter token do corpo da resposta (ajuste conforme retorno do backend)
+        try:
+            self.access_token = login_response.json().get("access_token")
+        except Exception:
+            self.access_token = None
 
         # Configurar headers para autenticação
-        self.headers = {"Cookie": f"access_token={self.access_token}"}
+        self.headers = {"Authorization": f"Bearer {self.access_token}"} if self.access_token else {}
     
     def test_criar_curso_e_verificar_lista(self):
         """Teste: Criar um curso e verificar se aparece na lista"""
@@ -70,14 +72,14 @@ class TestAPI:
             "descricao": "Curso básico de Python"
         }
 
-        response = client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
-        assert response.status_code == 200
+    response = client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
+    assert response.status_code == 200
 
-        # Verificar se o curso aparece na lista
-        response = client.get("/cursos", headers=self.headers)
-        assert response.status_code == 200
-        assert "Introdução à Programação" in response.text
-        assert "Curso básico de Python" in response.text
+    # Verificar se o curso aparece na lista
+    response = client.get("/cursos", headers=self.headers)
+    assert response.status_code == 200
+    assert "Introdução à Programação" in response.text
+    assert "Curso básico de Python" in response.text
     
     def test_criar_aluno_e_verificar_lista(self):
         """Teste: Criar um aluno e verificar se aparece na lista"""
@@ -86,7 +88,7 @@ class TestAPI:
             "nome": "Matemática",
             "descricao": "Curso de matemática básica"
         }
-        client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
+    client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
 
         # Criar aluno
         aluno_data = {
@@ -94,13 +96,13 @@ class TestAPI:
             "curso_id": "1"
         }
 
-        response = client.post("/alunos/adicionar", data=aluno_data, headers=self.headers)
-        assert response.status_code == 200
+    response = client.post("/alunos/adicionar", json=aluno_data, headers=self.headers)
+    assert response.status_code == 200
 
-        # Verificar se o aluno aparece na lista
-        response = client.get("/alunos", headers=self.headers)
-        assert response.status_code == 200
-        assert "João Silva" in response.text
+    # Verificar se o aluno aparece na lista
+    response = client.get("/alunos", headers=self.headers)
+    assert response.status_code == 200
+    assert "João Silva" in response.text
     
     def test_criar_professor_e_verificar_lista(self):
         """Teste: Criar um professor e verificar se aparece na lista"""
@@ -111,15 +113,15 @@ class TestAPI:
             "departamento": "Ciências Exatas"
         }
 
-        response = client.post("/professores/adicionar", data=professor_data, headers=self.headers)
-        assert response.status_code == 200
+    response = client.post("/professores/adicionar", json=professor_data, headers=self.headers)
+    assert response.status_code == 200
 
-        # Verificar se o professor aparece na lista
-        response = client.get("/professores", headers=self.headers)
-        assert response.status_code == 200
-        assert "Dr. Carlos" in response.text
-        assert "Matemática" in response.text
-        assert "Ciências Exatas" in response.text
+    # Verificar se o professor aparece na lista
+    response = client.get("/professores", headers=self.headers)
+    assert response.status_code == 200
+    assert "Dr. Carlos" in response.text
+    assert "Matemática" in response.text
+    assert "Ciências Exatas" in response.text
     
     def test_editar_curso(self):
         """Teste: Editar um curso existente"""
@@ -128,7 +130,7 @@ class TestAPI:
             "nome": "História",
             "descricao": "História antiga"
         }
-        client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
+    client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
 
         # Editar curso
         curso_editado = {
@@ -136,14 +138,14 @@ class TestAPI:
             "descricao": "História dos séculos XVI-XIX"
         }
 
-        response = client.post("/cursos/editar/1", data=curso_editado, headers=self.headers)
-        assert response.status_code == 200
+    response = client.post("/cursos/editar/1", json=curso_editado, headers=self.headers)
+    assert response.status_code == 200
 
-        # Verificar se foi editado
-        response = client.get("/cursos", headers=self.headers)
-        assert response.status_code == 200
-        assert "História Moderna" in response.text
-        assert "História dos séculos XVI-XIX" in response.text
+    # Verificar se foi editado
+    response = client.get("/cursos", headers=self.headers)
+    assert response.status_code == 200
+    assert "História Moderna" in response.text
+    assert "História dos séculos XVI-XIX" in response.text
     
     def test_deletar_curso(self):
         """Teste: Deletar um curso"""
@@ -152,7 +154,7 @@ class TestAPI:
             "nome": "Geografia",
             "descricao": "Geografia física"
         }
-        client.post("/cursos/adicionar", data=curso_data, headers=self.headers)
+    client.post("/cursos/adicionar", json=curso_data, headers=self.headers)
 
         # Verificar se foi criado
         response = client.get("/cursos", headers=self.headers)
@@ -179,9 +181,9 @@ class TestAPI:
             "password": "senha123"
         }
 
-        response = client.post("/register", data=novo_usuario)
-        assert response.status_code == 200
+    response = client.post("/register", json=novo_usuario)
+    assert response.status_code == 200
 
-        # Tentar fazer login com o novo usuário
-        login_response = client.post("/login", data=novo_usuario)
-        assert login_response.status_code == 200
+    # Tentar fazer login com o novo usuário
+    login_response = client.post("/login", json=novo_usuario)
+    assert login_response.status_code == 200
