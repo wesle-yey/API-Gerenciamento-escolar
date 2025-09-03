@@ -1,17 +1,26 @@
-fastapi
-uvicorn
-sqlalchemy
-python-dotenv
-pydantic
-jinja2
-python-multipart
-psycopg2-binary
-passlib[bcrypt,sha256_crypt]==1.7.4
-python-jose[cryptography]
-dotenv
-pyqt5==5.12.3
-pyqtwebengine==5.12.1
+# FastAPI e servidor
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Banco de dados
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+
+# Autenticação e segurança
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+
+# Templates e formulários
+jinja2==3.1.2
+python-multipart==0.0.6
+
+# Validação de dados
+pydantic==2.5.0
+
+# Variáveis de ambiente
+python-dotenv==1.0.0
+
 # Dependências de teste
-pytest
-pytest-asyncio
-httpx
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
